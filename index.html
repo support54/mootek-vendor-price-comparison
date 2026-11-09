@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14243a">
+<meta name="description" content="MOOTEK local vendor price comparison and quotation tool">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>MOOTEK Vendor Price Comparison</title>
+<style>
+:root{--navy:#14243a;--blue:#1769aa;--bg:#f3f6fa;--line:#dce3ec;--muted:#64748b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px/1.45 Arial,sans-serif;color:#172334}
+header{background:linear-gradient(120deg,#10243d,#1c527d);color:white;padding:22px 24px}
+header h1{margin:0 0 4px;font-size:23px}header p{margin:0;color:#d5e5f4}
+main{max-width:1250px;margin:22px auto;padding:0 16px}.panel{background:white;border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:0 3px 12px #14243a0a}
+.panel h2{font-size:16px;margin:0 0 14px;color:var(--navy)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:12px}
+label{display:block;font-weight:700;font-size:12px;color:#526174;margin-bottom:5px}
+input,select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;font:inherit;min-width:0}
+input:focus,select:focus{outline:2px solid #b7d9f4;border-color:#438bc4}
+.row{display:grid;grid-template-columns:1.25fr 1.25fr .8fr .8fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:10px}
+.row .field{min-width:0}.small{font-size:11px;color:var(--muted);margin-top:4px}
+button{border:0;border-radius:7px;padding:10px 14px;font-weight:700;cursor:pointer}
+.primary{background:var(--blue);color:white}.secondary{background:#e8eef5;color:#26384d}.danger{background:#fee2e2;color:#991b1b}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left}th{background:#f5f8fb;color:#40536a;font-size:12px}
+.low{background:#e4f7e9!important}.mid{background:#fff4cc!important}.high{background:#ffe2e2!important}
+.tag{display:inline-block;border-radius:20px;padding:3px 8px;font-size:11px;font-weight:700}.tag.low{color:#176534}.tag.mid{color:#805600}.tag.high{color:#a32121}
+.summary{display:flex;gap:12px;flex-wrap:wrap}.metric{background:#f5f8fb;border:1px solid var(--line);border-radius:9px;padding:12px 16px;min-width:150px}.metric strong{display:block;font-size:20px;color:var(--navy)}
+footer{color:var(--muted);font-size:12px;text-align:center;padding:12px}
+@media(max-width:760px){.grid{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr 1fr}.row button{grid-column:span 2}.panel{padding:13px}}
+@media print{body{background:white}header{background:#14243a!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}main{max-width:none;margin:8px;padding:0}.panel{box-shadow:none;break-inside:avoid}.no-print{display:none!important}input,select{border:0;padding:2px;background:transparent}table{min-width:0;font-size:11px}th,td{padding:6px}.low,.mid,.high{ -webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<header><h1>MOOTEK Vendor Price Comparison</h1><p>Local vendor quotation entry · Automatic lowest-price identification · PDF report</p></header>
+<main>
+<section class="panel">
+<h2>Quotation Details</h2>
+<div class="grid">
+<div><label>Customer Name</label><input id="customer" placeholder="Enter customer name"></div>
+<div><label>Sales Person</label><select id="sales"><option value="">Select sales person</option><option>MANI</option><option>RAJ</option><option>RAJA</option><option>SUDA</option><option>NISANTHINI</option><option>THIRISAHA</option><option>MD</option></select></div>
+<div><label>Quotation Date</label><input id="date" type="date"></div>
+</div>
+</section>
+<section class="panel no-print">
+<h2>Add Vendor Price</h2>
+<div class="row" id="entry">
+<div class="field"><label>Product</label><input id="product" placeholder="e.g. 1TB SSD"></div>
+<div class="field"><label>Vendor (Select or Type Manually)</label><input id="vendor" list="vendorOptions" placeholder="Select or enter vendor name"><datalist id="vendorOptions"><option value="Mahavir Infotech"></option><option value="Sai computer"></option><option value="Multi IT"></option><option value="Anand IT"></option></datalist></div>
+<div class="field"><label>Unit Price (₹)</label><input id="price" type="number" min="0" step="0.01" placeholder="0.00"></div>
+<div class="field"><label>Qty</label><input id="qty" type="number" min="1" step="1" value="1"></div>
+<div class="field"><label>GST Mode</label><select id="gstMode"><option value="extra">GST Extra</option><option value="included">GST Included</option><option value="none">No GST</option></select></div>
+<div class="field"><label>GST % (manual)</label><input id="gst" type="number" min="0" max="100" step="0.01" value="18"></div>
+<button class="primary" onclick="addEntry()">Add</button>
+</div>
+<div class="small">Comparison is based on final unit price after GST, so vendors are compared fairly. GST percentage can be edited manually.</div>
+</section>
+<section class="panel">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">Vendor Comparison</h2><span class="small" id="count">0 entries</span></div>
+<div class="table-wrap" style="margin-top:12px">
+<table><thead><tr><th>Product</th><th>Vendor</th><th>Unit Price</th><th>GST</th><th>Qty</th><th>Final Unit</th><th>Total</th><th>Price Level</th><th class="no-print">Action</th></tr></thead><tbody id="body"><tr><td colspan="9" style="text-align:center;color:#64748b">No vendor entries yet. Add your first product above.</td></tr></tbody></table>
+</div>
+<div class="small" style="margin-top:10px">Green = lowest price · Yellow = middle price · Red = highest price (compared within the same product). If only two vendors are entered, lowest is green and highest is red.</div>
+</section>
+<section class="panel">
+<h2>Summary</h2><div class="summary">
+<div class="metric"><span class="small">Products</span><strong id="productsCount">0</strong></div>
+<div class="metric"><span class="small">Vendor Entries</span><strong id="entriesCount">0</strong></div>
+<div class="metric"><span class="small">Lowest Quoted Total</span><strong id="lowestTotal">₹0.00</strong></div>
+</div>
+<div class="actions no-print">
+<button class="primary" onclick="window.print()">Download / Save PDF</button>
+<button class="secondary" onclick="exportCSV()">Export CSV</button>
+<button class="secondary" onclick="saveData()">Save on This Device</button>
+<button class="secondary" onclick="loadData()">Load Saved Data</button>
+<button class="danger" onclick="clearAll()">Clear All</button>
+</div>
+</section>
+<footer>MOOTEK · Data is stored locally in this browser on this device. Use Save on This Device regularly.</footer>
+</main>
+<script>
+let entries=[];
+const $=id=>document.getElementById(id);
+const money=n=>'₹'+Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+function calc(e){
+ let p=Number(e.price),g=Number(e.gst),u=p;
+ if(e.gstMode==='extra')u=p*(1+g/100);
+ if(e.gstMode==='included')u=p;
+ if(e.gstMode==='none')u=p;
+ return {unit:u,total:u*Number(e.qty)};
+}
+function addEntry(){
+ const product=$('product').value.trim(),vendor=$('vendor').value.trim(),price=$('price').value,qty=$('qty').value,gst=$('gst').value;
+ if(!product||!vendor||price===''||Number(price)<0||!qty||Number(qty)<1){alert('Please enter Product, Vendor, valid Price and Qty.');return}
+ entries.push({id:Date.now()+Math.random(),product,vendor,price:Number(price),qty:Number(qty),gst:Number(gst||0),gstMode:$('gstMode').value});
+ $('product').value='';$('vendor').value='';$('price').value='';$('qty').value=1;$('product').focus();render();
+}
+function render(){
+ const body=$('body');body.innerHTML='';
+ if(!entries.length)body.innerHTML='<tr><td colspan="9" style="text-align:center;color:#64748b">No vendor entries yet. Add your first product above.</td></tr>';
+ const groups={};entries.forEach(e=>(groups[e.product.toLowerCase()]??=[]).push(e));
+ let lowest=0;
+ entries.forEach(e=>{const c=calc(e);lowest+=c.total});
+ for(const e of entries){
+  const group=groups[e.product.toLowerCase()],sorted=group.map(x=>calc(x).unit).sort((a,b)=>a-b),v=calc(e).unit,min=sorted[0],max=sorted[sorted.length-1];
+  let cls='mid',level='MEDIUM';
+  if(Math.abs(v-min)<.005){cls='low';level='LOWEST'}
+  else if(Math.abs(v-max)<.005){cls='high';level='HIGHEST'}
+  else {cls='mid';level='MEDIUM'}
+  if(sorted.length===1){cls='low';level='ONLY QUOTE'}
+  const tr=document.createElement('tr');tr.className=cls;
+  const gstText=e.gstMode==='none'?'No GST':(e.gst+'% '+(e.gstMode==='included'?'Included':'Extra'));
+  tr.innerHTML=`<td>${esc(e.product)}</td><td>${esc(e.vendor)}</td><td>${money(e.price)}</td><td>${esc(gstText)}</td><td>${e.qty}</td><td>${money(v)}</td><td><b>${money(calc(e).total)}</b></td><td><span class="tag ${cls}">${level}</span></td><td class="no-print"><button class="danger" style="padding:6px 9px" onclick="removeEntry('${e.id}')">Delete</button></td>`;
+  body.appendChild(tr);
+ }
+ $('count').textContent=entries.length+' entries';$('entriesCount').textContent=entries.length;
+ $('productsCount').textContent=Object.keys(groups).length;$('lowestTotal').textContent=money(lowest);
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function removeEntry(id){entries=entries.filter(e=>String(e.id)!==String(id));render()}
+function saveData(){localStorage.setItem('mootekVendorComparison',JSON.stringify({entries,customer:$('customer').value,sales:$('sales').value,date:$('date').value}));alert('Saved on this device.')}
+function loadData(){let d=localStorage.getItem('mootekVendorComparison');if(!d){alert('No saved data found on this device.');return}try{d=JSON.parse(d);entries=d.entries||[];$('customer').value=d.customer||'';$('sales').value=d.sales||'';$('date').value=d.date||'';render()}catch(e){alert('Could not load saved data.')}}
+function clearAll(){if(confirm('Delete all entries from this screen? Save first if needed.')){entries=[];render()}}
+function exportCSV(){
+ const rows=[['Customer',$('customer').value],['Sales Person',$('sales').value],['Date',$('date').value],[],['Product','Vendor','Unit Price','GST Mode','GST %','Qty','Final Unit Price','Total']];
+ entries.forEach(e=>{let c=calc(e);rows.push([e.product,e.vendor,e.price,e.gstMode,e.gst,e.qty,c.unit,c.total])});
+ const csv=rows.map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='MOOTEK_Vendor_Comparison.csv';a.click();URL.revokeObjectURL(a.href);
+}
+$('date').value=new Date().toISOString().slice(0,10);render();
+</script>
+<script>
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+</body></html>
